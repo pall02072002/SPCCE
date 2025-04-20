@@ -1,0 +1,124 @@
+Experiment No.5
+Study and Implementation of Lexical Analyzer.
+
+
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <regex>
+#include <unordered_set>
+
+using namespace std;
+
+// Define sets for keywords, operators, punctuators
+unordered_set<string> keywords = {"if", "else", "while", "for", "return", "int", "float"};
+unordered_set<string> operators = {"+", "-", "*", "/", "%"};
+unordered_set<string> punctuators = {",", ";", "(", ")", "{", "}"};
+string assignment_operator = "=";
+
+// Token structure
+struct Token {
+    string type;
+    string value;
+};
+
+// Tokenize function
+vector<Token> tokenize(const string& input) {
+    vector<Token> tokens;
+    size_t position = 0;
+    smatch match;
+
+    // Define regex patterns
+    regex whitespace(R"(\s+)");
+    regex constant(R"(\d+(\.\d+)?)");
+    regex identifier(R"([a-zA-Z_][a-zA-Z0-9_]*)");
+    regex literal("\"[^\"]*\"");  // FIXED HERE
+    regex op(R"([\+\-\*/%])");
+    regex assign(R"(=)");
+    regex punct(R"([,;(){}])");
+
+    while (position < input.length()) {
+        // Skip whitespace
+        if (regex_search(input.begin() + position, input.end(), match, whitespace) && match.position() == 0) {
+            position += match.length();
+            continue;
+        }
+
+        // Literal
+        if (regex_search(input.begin() + position, input.end(), match, literal) && match.position() == 0) {
+            tokens.push_back({"LITERAL", match.str()});
+            position += match.length();
+            continue;
+        }
+
+        // Constant
+        if (regex_search(input.begin() + position, input.end(), match, constant) && match.position() == 0) {
+            tokens.push_back({"CONSTANT", match.str()});
+            position += match.length();
+            continue;
+        }
+
+        // Identifier or Keyword
+        if (regex_search(input.begin() + position, input.end(), match, identifier) && match.position() == 0) {
+            string value = match.str();
+            if (keywords.find(value) != keywords.end())
+                tokens.push_back({"KEYWORD", value});
+            else
+                tokens.push_back({"IDENTIFIER", value});
+            position += match.length();
+            continue;
+        }
+
+        // Operator
+        if (regex_search(input.begin() + position, input.end(), match, op) && match.position() == 0) {
+            tokens.push_back({"OPERATOR", match.str()});
+            position += match.length();
+            continue;
+        }
+
+        // Assignment Operator
+        if (regex_search(input.begin() + position, input.end(), match, assign) && match.position() == 0) {
+            tokens.push_back({"ASSIGNMENT_OPERATOR", match.str()});
+            position += match.length();
+            continue;
+        }
+
+        // Punctuator
+        if (regex_search(input.begin() + position, input.end(), match, punct) && match.position() == 0) {
+            tokens.push_back({"PUNCTUATOR", match.str()});
+            position += match.length();
+            continue;
+        }
+
+        // If no match found
+        cerr << "Unmatched character at position " << position << ": " << input[position] << endl;
+        throw runtime_error("Invalid character in input.");
+    }
+
+    return tokens;
+}
+
+// Main function
+int main() {
+    string input;
+    cout << "Enter the string: ";
+    getline(cin, input);
+
+    try {
+        vector<Token> tokens = tokenize(input);
+        for (const auto& token : tokens) {
+            cout << "Token: " << token.type << " | Value: " << token.value << endl;
+        }
+    } catch (const exception& e) {
+        cerr << e.what() << endl;
+    }
+
+    return 0;
+}
+
+
+
+//output
+
+entre string int x=10.y=5,int z=x+y

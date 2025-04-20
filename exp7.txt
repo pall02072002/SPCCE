@@ -1,0 +1,216 @@
+Experiment No.7 
+Implementation of Intermediate Code Generation (ICG) 
+
+
+
+//user input
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+
+// Function to return precedence of operators
+int prec(char c) {
+    if (c == '^') 
+        return 3; 
+    else if (c == '/' || c == '*') 
+        return 2; 
+    else if (c == '+' || c == '-') 
+        return 1; 
+    else 
+        return -1; 
+}
+
+// Function to perform infix to postfix conversion
+void infixToPostfix(char* exp, char* postfix) {
+    int len = strlen(exp); 
+    char stack[len];  // Stack to hold operators
+    int j = 0, top = -1;
+
+    for (int i = 0; i < len; i++) {
+        char c = exp[i];
+
+        if (isalnum(c)) {
+            postfix[j++] = c;  // Operand to output
+        } else if (c == '(') {
+            stack[++top] = '('; // Push '(' to stack
+        } else if (c == ')') {
+            // Pop operators until '(' is found
+            while (top != -1 && stack[top] != '(')
+                postfix[j++] = stack[top--];
+            top--;  // Pop '(' from stack
+        } else { 
+            // Pop operators with higher or equal precedence
+            while (top != -1 && prec(c) <= prec(stack[top]))
+                postfix[j++] = stack[top--];
+            stack[++top] = c; // Push current operator
+        }
+    }
+
+    // Pop all remaining operators from the stack
+    while (top != -1) 
+        postfix[j++] = stack[top--];
+
+    postfix[j] = '\0';  // Null-terminate postfix expression
+}
+
+// Function to generate Three-Address Code
+void generateTAC(char* postfix) {
+    char stack[100][10];  // Stack to hold intermediate results
+    int top = -1, tempVarCount = 1;
+
+    printf("\nThree-Address Code:\n");
+    for (int i = 0; postfix[i] != '\0'; i++) {
+        char c = postfix[i];
+        
+        if (isalnum(c)) {
+            char operand[2] = {c, '\0'};  // Convert single character to string
+            strcpy(stack[++top], operand);
+        } else {
+            // Operand 2 (right side) and operand 1 (left side)
+            char op2[10], op1[10], tempVar[10];
+            strcpy(op2, stack[top--]);
+            strcpy(op1, stack[top--]);
+
+            // Generate a new temporary variable for the result
+            sprintf(tempVar, "T%d", tempVarCount++);
+            printf("%s = %s %c %s\n", tempVar, op1, c, op2);
+            strcpy(stack[++top], tempVar);  // Push temporary variable onto stack
+        }
+    }
+}
+
+int main() {
+    char exp[100];  // Array to hold user input infix expression
+    char postfix[100];
+
+    // Take user input for infix expression
+    printf("Enter an infix expression: ");
+    fgets(exp, sizeof(exp), stdin);
+    exp[strcspn(exp, "\n")] = 0;  // Remove newline character if present
+
+    printf("Infix Expression: %s\n", exp);
+    infixToPostfix(exp, postfix);
+    printf("Postfix Expression: %s\n", postfix);
+    generateTAC(postfix);  // Generate Three-Address Code
+
+    return 0;
+}
+
+
+
+//output
+Enter an infix expression: A+B*C-D/E
+Infix Expression: A+B*C-D/E
+Postfix Expression: ABC*+DE/-
+Three-Address Code:
+T1 = B * C
+T2 = A + T1
+T3 = D / E
+T4 = T2 - T3
+
+
+
+
+
+normal
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+
+// Function to return precedence of operators
+int prec(char c) {
+    if (c == '^') 
+        return 3; 
+    else if (c == '/' || c == '*') 
+        return 2; 
+    else if (c == '+' || c == '-') 
+        return 1; 
+    else 
+        return -1; 
+}
+
+// Function to perform infix to postfix conversion
+void infixToPostfix(char* exp, char* postfix) {
+    int len = strlen(exp); 
+    char stack[len];  // Stack to hold operators
+    int j = 0, top = -1;
+
+    for (int i = 0; i < len; i++) {
+        char c = exp[i];
+
+        if (isalnum(c)) {
+            postfix[j++] = c;  // Operand to output
+        } else if (c == '(') {
+            stack[++top] = '('; // Push '(' to stack
+        } else if (c == ')') {
+            // Pop operators until '(' is found
+            while (top != -1 && stack[top] != '(')
+                postfix[j++] = stack[top--];
+            top--;  // Pop '(' from stack
+        } else { 
+            // Pop operators with higher or equal precedence
+            while (top != -1 && prec(c) <= prec(stack[top]))
+                postfix[j++] = stack[top--];
+            stack[++top] = c; // Push current operator
+        }
+    }
+
+    // Pop all remaining operators from the stack
+    while (top != -1) 
+        postfix[j++] = stack[top--];
+
+    postfix[j] = '\0';  // Null-terminate postfix expression
+}
+
+// Function to generate Three-Address Code
+void generateTAC(char* postfix) {
+    char stack[100][10];  // Stack to hold intermediate results
+    int top = -1, tempVarCount = 1;
+
+    printf("\nThree-Address Code:\n");
+    for (int i = 0; postfix[i] != '\0'; i++) {
+        char c = postfix[i];
+        
+        if (isalnum(c)) {
+            char operand[2] = {c, '\0'};  // Convert single character to string
+            strcpy(stack[++top], operand);
+        } else {
+            // Operand 2 (right side) and operand 1 (left side)
+            char op2[10], op1[10], tempVar[10];
+            strcpy(op2, stack[top--]);
+            strcpy(op1, stack[top--]);
+
+            // Generate a new temporary variable for the result
+            sprintf(tempVar, "T%d", tempVarCount++);
+            printf("%s = %s %c %s\n", tempVar, op1, c, op2);
+            strcpy(stack[++top], tempVar);  // Push temporary variable onto stack
+        }
+    }
+}
+
+int main() {
+    char exp[] = "A+B*C-D/E";  // Infix expression
+    char postfix[100];
+
+    printf("Infix Expression: %s\n", exp);
+    infixToPostfix(exp, postfix);
+    printf("Postfix Expression: %s\n", postfix);
+    generateTAC(postfix);  // Generate Three-Address Code
+
+    return 0;
+}
+
+
+//output
+
+Infix Expression: A+B*C-D/E
+Postfix Expression: ABC*+DE/-
+Three-Address Code:
+T1 = B * C
+T2 = A + T1
+T3 = D / E
+T4 = T2 - T3

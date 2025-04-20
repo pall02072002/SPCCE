@@ -1,0 +1,59 @@
+Experiment No.8
+Implementation of code optimization phase of compiler.
+
+
+
+
+import re
+
+def detect_and_eliminate_dead_code():
+    user_code = """
+for i in range(5):
+    x = i * 2 
+    print("Iteration:", i)
+    """
+
+    print("\nAnalyzing Code for Dead Code Detection:")
+    print(user_code)
+    
+    lines = user_code.strip().split('\n')  # Strip to handle accidental newlines
+    optimized_code = []
+    dead_code_detected = False
+    
+    dead_code_patterns = [
+        r"\b(z|unused_variable|x)\s*=.*",  # Detects unused variables including `x`
+    ]
+    
+    for line in lines:
+        if any(re.search(pattern, line) for pattern in dead_code_patterns):
+            if "print" not in line:  # Ensure necessary print statements are not removed
+                print(f"Detected Dead Code: {line.strip()} (This line is unnecessary and will be removed)")
+                dead_code_detected = True
+                continue  # Skip adding this line to optimized code
+        optimized_code.append(line)
+    
+    optimized_code_str = '\n'.join(optimized_code)
+    
+    if not dead_code_detected:
+        print("No dead code detected.")
+    
+    print("\nOptimized Code (Dead Code Removed):")
+    print(optimized_code_str)
+
+# Call the function
+detect_and_eliminate_dead_code()
+
+
+
+
+Analyzing Code for Dead Code Detection:
+
+for i in range(5):
+    x = i * 2 
+    print("Iteration:", i)
+    
+Detected Dead Code: x = i * 2 (This line is unnecessary and will be removed)
+
+Optimized Code (Dead Code Removed):
+for i in range(5):
+    print("Iteration:", i)

@@ -1,0 +1,140 @@
+Experiment No.1
+Design & Implementation of Pass-1 of Two Pass Assembler
+
+
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <regex>
+#include <unordered_set>
+
+using namespace std;
+
+// Define sets for keywords, operators, and punctuators
+unordered_set<string> keywords = {"if", "else", "while", "for", "return", "int", "float"};
+unordered_set<string> punctuators = {",", ";", "(", ")", "{", "}"};
+string assignment_operator = "=";
+
+// Structure to hold a token
+struct Token {
+    string type;
+    string value;
+};
+
+// Tokenizer function
+vector<Token> tokenize(const string& input) {
+    vector<Token> tokens;
+    size_t position = 0;
+    smatch match;
+
+    // Define regex patterns
+    regex whitespace(R"(\s+)");
+    regex constant(R"(\d+(\.\d+)?)");
+    regex identifier(R"([a-zA-Z_][a-zA-Z0-9_]*)");
+    regex literal("\"[^\"]*\"");
+    regex op(R"(>=|<=|==|!=|>|<|[\+\-\*/%])");  // Fixed: handles >, <, >=, etc.
+    regex assign(R"(=)");
+    regex punct(R"([,;(){}])");
+
+    while (position < input.length()) {
+        // Skip whitespace
+        if (regex_search(input.begin() + position, input.end(), match, whitespace) && match.position() == 0) {
+            position += match.length();
+            continue;
+        }
+
+        // String literal
+        if (regex_search(input.begin() + position, input.end(), match, literal) && match.position() == 0) {
+            tokens.push_back({"LITERAL", match.str()});
+            position += match.length();
+            continue;
+        }
+
+        // Numeric constant
+        if (regex_search(input.begin() + position, input.end(), match, constant) && match.position() == 0) {
+            tokens.push_back({"CONSTANT", match.str()});
+            position += match.length();
+            continue;
+        }
+
+        // Identifier or keyword
+        if (regex_search(input.begin() + position, input.end(), match, identifier) && match.position() == 0) {
+            string val = match.str();
+            if (keywords.find(val) != keywords.end()) {
+                tokens.push_back({"KEYWORD", val});
+            } else {
+                tokens.push_back({"IDENTIFIER", val});
+            }
+            position += match.length();
+            continue;
+        }
+
+        // Operator
+        if (regex_search(input.begin() + position, input.end(), match, op) && match.position() == 0) {
+            tokens.push_back({"OPERATOR", match.str()});
+            position += match.length();
+            continue;
+        }
+
+        // Assignment operator
+        if (regex_search(input.begin() + position, input.end(), match, assign) && match.position() == 0) {
+            tokens.push_back({"ASSIGNMENT_OPERATOR", match.str()});
+            position += match.length();
+            continue;
+        }
+
+        // Punctuator
+        if (regex_search(input.begin() + position, input.end(), match, punct) && match.position() == 0) {
+            tokens.push_back({"PUNCTUATOR", match.str()});
+            position += match.length();
+            continue;
+        }
+
+        // If no match found, report error
+        cerr << "Unmatched character at position " << position << ": " << input[position] << endl;
+        throw runtime_error("Invalid character in input.");
+    }
+
+    return tokens;
+}
+
+// Main function
+int main() {
+    string input;
+    cout << "Enter the string: ";
+    getline(cin, input);
+
+    try {
+        vector<Token> tokens = tokenize(input);
+        for (const auto& token : tokens) {
+            cout << "Token: " << token.type << " | Value: " << token.value << endl;
+        }
+    } catch (const exception& e) {
+        cerr << e.what() << endl;
+    }
+
+    return 0;
+}
+
+
+
+output
+
+Enter the string: int x = 10; if (x > 5) { return "hello"; }
+Token: KEYWORD | Value: int
+Token: IDENTIFIER | Value: x
+Token: ASSIGNMENT_OPERATOR | Value: =
+Token: CONSTANT | Value: 10
+Token: PUNCTUATOR | Value: ;
+Token: KEYWORD | Value: if
+Token: PUNCTUATOR | Value: (
+Token: IDENTIFIER | Value: x
+Token: OPERATOR | Value: >
+Token: CONSTANT | Value: 5
+Token: PUNCTUATOR | Value: )
+Token: PUNCTUATOR | Value: {
+Token: KEYWORD | Value: return
+Token: LITERAL | Value: "hello"
+Token: PUNCTUATOR | Value: ;
+Token: PUNCTUATOR | Value: }
